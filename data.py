@@ -1,8 +1,4 @@
-from os import path
-import sys
-sys.path.append(path.abspath('../Wikipedia'))
-
-from wikipedia import wikipedia
+import wikipedia
 import codecs
 import re
 
