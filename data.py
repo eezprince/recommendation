@@ -1,4 +1,8 @@
-import wikipedia
+from os import path
+import sys
+sys.path.append(path.abspath('../Wikipedia'))
+
+from wikipedia import wikipedia
 import codecs
 import re
 
@@ -15,17 +19,18 @@ with codecs.open('movies.csv', 'r') as input:
         title = info[1]
         result = pattern.search(title)
         if result:
-            index = result.start() - 1
+            index = result.end() - 1
             title = title[:index] + ' film' + title[index:]
         else:
             title = title + ' (film)'
         try:
+            print 'processing {} {} ...'.format(info[0], title)
             s = wikipedia.summary(title)
             output.write('{}\t{}\n'.format(
                     info[0],
                    s.replace('\n', ' ')))
             success += 1
-        except Exception, e:
+        except Exception:
             print 'get {} error'.format(info[0])
             error_output.write('{}\n'.format(info[0]))
         total += 1
