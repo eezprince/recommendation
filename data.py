@@ -4,6 +4,8 @@ import codecs
 import re
 import traceback
 import csv
+import warnings
+warnings.simplefilter("ignore", UserWarning)
 
 
 def write(out, id, s):
@@ -36,6 +38,8 @@ with codecs.open('movies.csv', 'r') as input:
             print 'unhandle line: ' + line
             continue
         title = info[1]
+        if ', The' in title:
+            title = 'The ' + title.encode('utf-8').replace(', The', '')
         result = pattern.search(title)
         if result:
             index = result.end() - 1
