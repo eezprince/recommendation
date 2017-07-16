@@ -39,7 +39,7 @@ with codecs.open('movies.csv', 'r') as input:
             continue
         title = info[1]
         if ', The' in title:
-            title = 'The ' + title.encode('utf-8').replace(', The', '')
+            title = 'The ' + title.replace(', The', '')
         result = pattern.search(title)
         if result:
             index = result.end() - 1
