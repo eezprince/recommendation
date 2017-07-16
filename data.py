@@ -1,6 +1,7 @@
 import wikipedia
 import codecs
 import re
+import traceback
 
 
 output = codecs.open('output.txt', 'w')
@@ -27,6 +28,7 @@ with codecs.open('movies.csv', 'r') as input:
                    s.replace('\n', ' ')))
             success += 1
         except Exception:
+            traceback.print_exc()
             print 'get {} error'.format(info[0])
             error_output.write('{}\n'.format(info[0]))
         total += 1
