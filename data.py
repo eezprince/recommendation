@@ -43,7 +43,7 @@ def images(id, title):
     utils.ensure_folder_exists('images')
     try:
         print 'processing {} {} ...'.format(id, title)
-        html = wikipedia.WikipediaPage(title).html()
+        html = wikipedia.page(title).html()
         parsed_html = BeautifulSoup(html, 'html.parser')
         table = parsed_html.find('table', attrs={'class':'infobox vevent'})
         url = table.find_all('tr')[1].find('a').find('img')['src']
