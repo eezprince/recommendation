@@ -1,5 +1,6 @@
 import wikipedia
 from requests.exceptions import ConnectionError
+from requests.exceptions import RequestException
 import codecs
 import re
 import traceback
@@ -20,6 +21,9 @@ def summary(id, title):
         write(output, id, s)
     except ConnectionError:
         print 'Connection error, retry...'
+        summary(info[0], title)
+    except RequestException:
+        print 'Request error, retry...'
         summary(info[0], title)
 
 output = codecs.open('output.txt', 'w')
