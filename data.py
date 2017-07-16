@@ -90,7 +90,7 @@ def main(args):
                 firstline = False
                 continue
             if len(info) != 3:
-                print 'unhandle line: ' + line
+                print 'unhandle line: ' + info
                 continue
             title = info[1]
             if ', The' in title:
