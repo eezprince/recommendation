@@ -20,6 +20,9 @@ warnings.simplefilter("ignore", UserWarning)
 output = codecs.open('output.txt', 'w')
 error_output = codecs.open('error.txt', 'w')
 
+year_pattern = re.compile(r'\([0-9]{4}\)')
+aka_pattern = re.compile(r'\(a\.k\.a\. (.+?)\)')
+
 
 def write(out, id, s):
 
@@ -80,8 +83,6 @@ def main(args):
         print('nothing need to do')
         return
 
-    year_pattern = re.compile(r'\([0-9]{4}\)')
-    aka_pattern = re.compile(r'\(a\.k\.a\. (.+?)\)')
     total = 0
     success = 0
     with codecs.open('movies.csv', 'r') as input:
@@ -95,25 +96,12 @@ def main(args):
                 print('unhandle line: ' + info)
                 continue
             title = info[1]
-            if title.endswith(', The'):
-                title = 'The ' + title.rreplace(', The', '', 1)
-            if title.endswith(', A'):
-                title = 'A ' + title.rreplace(', A', '', 1)
-
-            akalist = aka_pattern.findall(title)
-            if len(akalist) != 0:
-                title = aka_pattern.sub('', title).strip()
-
-            result = year_pattern.search(title)
-            if result:
-                index = result.end() - 1
-                title = title[:index] + ' film' + title[index:]
-            else:
-                title = title + ' (film)'
 
             try:
-                if try_all(args, info[0], akalist, result, title):
+                if try_all(args, info[0], title):
                     success += 1
+                else:
+                    error_output.write('{}\n'.format(info[0]))
             except Exception:
                 print('get {} error'.format(info[0]))
                 traceback.print_exc()
@@ -127,18 +115,39 @@ def main(args):
     print('total: {}, success: {}'.format(total, success))
 
 
-def try_all(args, id, akalist, result, title):
+def try_all(args, id, title):
+
+    akalist = aka_pattern.findall(title)
+    if len(akalist) != 0:
+        title = aka_pattern.sub('', title)
+        title = ' '.join(title.split())
+        title = title.strip()
+
+    result = year_pattern.search(title)
 
     if result:
-        index = result.start() - 2
+        index = result.start() - 1
         title_noyear = title[:index]
     else:
         title_noyear = title
 
     akalist.insert(0, title_noyear)
+    title_nobrace = re.sub('\(.+?\)', '', title_noyear, 1)
+    if title_nobrace != title_noyear:
+        akalist.insert(0, title_nobrace)
 
     trylist = []
     for title_noyear in akalist:
+        if title_noyear.endswith(', The'):
+            title_noyear = 'The ' \
+                + utils.replace_last(title_noyear,
+                                     ', The',
+                                     '')
+        if title_noyear.endswith(', A'):
+            title_noyear = 'A ' \
+                    + utils.replace_last(title_noyear,
+                                         ', A',
+                                         '')
         if result:
             title_year = title_noyear + ' (' \
                          + title[result.start()+1:result.end()-1] \
