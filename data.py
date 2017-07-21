@@ -1,3 +1,5 @@
+"-*- coding: utf-8 -*-"
+
 try:
     from BeautifulSoup import BeautifulSoup
 except ImportError:
@@ -14,6 +16,7 @@ import traceback
 import csv
 import warnings
 import utils
+import yaml
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -44,47 +47,77 @@ def summary(id, title):
         summary(id, title)
 
 
-def images(id, title):
+def search_page(id, title, callbacks):
 
-    utils.ensure_folder_exists('images')
     try:
         print('processing {} {} ...'.format(id, title))
         html = wikipedia.page(title).html()
         parsed_html = BeautifulSoup(html, 'html.parser')
         table = parsed_html.find('table', attrs={'class': 'infobox vevent'})
-        url = table.find_all('tr')[1].find('a').find('img')['src']
-        if 'http' not in url:
-            url = 'https:' + url
-        print('get image from: ' + url)
-        image = urllib.urlopen(url)
-        with open(path.join('images',
-                            id + '.' + url.split('.')[-1]),
-                  'wb') as out:
-            out.write(image.read())
+        for callback in callbacks:
+            callback(table, id)
     except ConnectionError:
         print('Connection error, retry...')
-        images(id, title)
+        search_page(id, title, callbacks)
     except RequestException:
         print('Request error, retry...')
-        images(id, title)
+        search_page(id, title, callbacks)
+
+
+def images(table, id):
+
+    url = table.find_all('tr')[1].find('a').find('img')['src']
+    if 'http' not in url:
+        url = 'https:' + url
+    print('get image from: ' + url)
+    image = urllib.urlopen(url)
+    with open(path.join('images',
+                        id + '.' + url.split('.')[-1]),
+              'wb') as out:
+        out.write(image.read())
+
+
+def structual(table, id):
+
+    infos = {}
+    for tr in table.find_all('tr'):
+        th = tr.find('th')
+        td = tr.find('td')
+        if th and td:
+            key = th.get_text()
+            texts = []
+            for text in td.get_text().splitlines():
+                if text:
+                    texts.append(text.encode('utf8').replace('\xe2\x80\x93', '-'))
+            infos[str(key)] = texts
+    with codecs.open(path.join('structual', id + '.yaml'), 'w',
+                     'utf8') as out:
+        out.write(yaml.dump(infos, default_flow_style=False))
 
 
 def handler(args, id, title):
 
     if args.summary:
         summary(id, title)
+    callbacks = []
     if args.image:
-        images(id, title)
+        callbacks.append(images)
+    if args.structual:
+        callbacks.append(structual)
+    if len(callbacks):
+        search_page(id, title, callbacks)
 
 
 def main(args):
 
-    if not args.summary and not args.image:
+    if not args.summary and not args.image and not args.structual:
         print('nothing need to do')
         return
 
     total = 0
     success = 0
+    utils.ensure_folder_exists('images')
+    utils.ensure_folder_exists('structual')
     with codecs.open('movies.csv', 'r') as input:
         reader = csv.reader(input)
         firstline = True
@@ -185,5 +218,10 @@ if __name__ == "__main__":
                         action='store_true',
                         default=False,
                         help='get summary')
+    parser.add_argument('-t', '--structual',
+                        required=False,
+                        action='store_true',
+                        default=False,
+                        help='get structual')
     args = parser.parse_args()
     main(args)
