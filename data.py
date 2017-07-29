@@ -52,6 +52,7 @@ def search_page(id, title, callbacks):
     try:
         print('processing {} {} ...'.format(id, title))
         html = wikipedia.page(title).html()
+        html = re.sub('<br.*?>', '\n', html)
         parsed_html = BeautifulSoup(html, 'html.parser')
         table = parsed_html.find('table', attrs={'class': 'infobox vevent'})
         for callback in callbacks:
@@ -84,7 +85,7 @@ def structual(table, id):
         th = tr.find('th')
         td = tr.find('td')
         if th and td:
-            key = th.get_text()
+            key = th.get_text().replace('\n', '')
             texts = []
             for text in td.get_text().splitlines():
                 if text:
