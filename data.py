@@ -85,9 +85,10 @@ def structual(table, id):
         th = tr.find('th')
         td = tr.find('td')
         if th and td:
-            key = th.get_text().replace('\n', '')
+            key = th.get_text().replace('\n', ' ').strip()
             texts = []
             for text in td.get_text().splitlines():
+                text = text.strip()
                 if text:
                     texts.append(text.encode('utf8').replace('\xe2\x80\x93', '-'))
             infos[str(key)] = texts
