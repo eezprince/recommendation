@@ -25,7 +25,7 @@ error_output = codecs.open('error.txt', 'w')
 
 year_pattern = re.compile(r'\([0-9]{4}\)')
 aka_pattern = re.compile(r'\(a\.k\.a\. (.+?)\)')
-
+date_pattern = re.compile(r'\((.+?)\)')
 
 def write(out, id, s):
 
@@ -90,11 +90,17 @@ def structual(table, id):
             for text in td.get_text().splitlines():
                 text = text.strip()
                 if text:
-                    texts.append(text.encode('utf8').replace('\xe2\x80\x93', '-'))
+                    text = text.encode('utf-8')
+                    text = text.replace('\xe2\x80\x93', '-')
+                    if key == 'Release date':
+                        text = date_pattern.findall(text)[0]
+                    texts.append(text)
             infos[str(key)] = texts
     with codecs.open(path.join('structual', id + '.yaml'), 'w',
                      'utf8') as out:
-        out.write(yaml.dump(infos, default_flow_style=False))
+        out.write(yaml.dump(infos,
+                            encoding='utf-8',
+                            default_flow_style=False))
 
 
 def handler(args, id, title):
