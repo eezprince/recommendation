@@ -17,6 +17,7 @@ import csv
 import warnings
 import utils
 import yaml
+import unicodedata
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -25,7 +26,7 @@ error_output = codecs.open('error.txt', 'w')
 
 year_pattern = re.compile(r'\([0-9]{4}\)')
 aka_pattern = re.compile(r'\(a\.k\.a\. (.+?)\)')
-date_pattern = re.compile(r'\((.+?)\)')
+date_pattern = re.compile(r'(.+?)\(.+?\)')
 
 def write(out, id, s):
 
@@ -90,18 +91,17 @@ def structual(table, id):
             for text in td.get_text().splitlines():
                 text = text.strip()
                 if text:
+                    text = unicodedata.normalize("NFKD", text)
                     text = text.encode('utf-8')
-                    text = text.replace('\xe2\x80\x93', '-')
-                    if key == 'Release date':
-                        date = date_pattern.findall(text)
-                        if len(date) > 0:
-                            text = date
-                        else:
-                            text = text
-                    texts.append(text)
+                    date = date_pattern.findall(text)
+                    if len(date) > 0:
+                        text = date[0]
+                    else:
+                        text = text
+                    texts.append(text.strip())
             infos[str(key)] = texts
     with codecs.open(path.join('structual', id + '.yaml'), 'w',
-                     'utf8') as out:
+                     'utf-8') as out:
         out.write(yaml.dump(infos,
                             encoding='utf-8',
                             default_flow_style=False))
