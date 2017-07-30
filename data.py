@@ -93,7 +93,11 @@ def structual(table, id):
                     text = text.encode('utf-8')
                     text = text.replace('\xe2\x80\x93', '-')
                     if key == 'Release date':
-                        text = date_pattern.findall(text)[0]
+                        date = date_pattern.findall(text)
+                        if len(date) > 0:
+                            text = date
+                        else:
+                            text = text
                     texts.append(text)
             infos[str(key)] = texts
     with codecs.open(path.join('structual', id + '.yaml'), 'w',
@@ -134,7 +138,7 @@ def main(args):
                 firstline = False
                 continue
             if len(info) != 3:
-                print('unhandle line: ' + info)
+                print('unhandle line')
                 continue
             title = info[1]
 
